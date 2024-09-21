@@ -1,0 +1,8 @@
+"0","# rearrangin in descending order"
+"0","top_10_players <- nba_stats %>%"
+"0","  select(Player, Tm, FG, TOV, PTS) %>%"
+"0","  arrange(desc(PTS)) %>%"
+"0","  head(10)"
+"0",""
+"0","# print result"
+"0","print(top_10_players)"

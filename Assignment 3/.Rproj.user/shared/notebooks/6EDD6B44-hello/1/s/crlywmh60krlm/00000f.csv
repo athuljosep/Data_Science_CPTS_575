@@ -1,0 +1,6 @@
+"0","# player with seventh highest points"
+"0","seventh_highest_player <- top_10_players[7, ""Player""]"
+"0","cat(""The player with the seventh highest points is:"", seventh_highest_player)"
+"1","The player with the seventh highest points is:"
+"1"," "
+"1","Kevin Durant"

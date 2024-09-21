@@ -1,0 +1,331 @@
+---
+title: "Assignment 3"
+editor: visual
+author: "Athul Jose P \\ 11867566"
+id: "11867566"
+dept: "School of Electrical Engineering and Computer Science"
+uni: "Washington State Univeristy" 
+subtitle: "CptS 575 Data Science"
+geometry: margin=1in
+format: pdf
+---
+
+```{r}
+#| label: load-packages
+#| include: false
+
+library(tidyverse)
+```
+
+\newpage
+
+### **1.a.**  
+
+The number of players with Free Throws per game greater than 0.5 and Assists per game greater than 0.7
+
+```{r}
+# loading packages
+library(dplyr)
+
+# loading dataset
+nba_stats <- read.csv("NBA_Stats_23_24.csv")
+
+# players with FT > 0.5 and AST > 0.7
+n_players <- nba_stats %>% 
+  filter(FT > 0.5, AST > 0.7) %>% 
+  nrow()
+
+# print result
+print(n_players)
+```
+
+### 1.b.
+
+```{r}
+# rearrangin in descending order
+top_10_players <- nba_stats %>%
+  select(Player, Tm, FG, TOV, PTS) %>%
+  arrange(desc(PTS)) %>%
+  head(10)
+
+# print result
+print(top_10_players)
+```
+
+```{r}
+# player with seventh highest points
+seventh_highest_player <- top_10_players[7, "Player"]
+cat("The player with the seventh highest points is:", seventh_highest_player)
+```
+
+### 1.c.
+
+```{r}
+# adding columns
+nba_stats <- nba_stats %>%
+  mutate(FGP = round((FG / FGA) * 100, 2),
+         FTP = round((FT / FTA) * 100, 2))
+
+# updated dataframe
+head(nba_stats)
+```
+
+```{r}
+# FGP and FTP for Josh Giddey
+josh_giddey_stats <- nba_stats %>%
+  filter(Player == "Josh Giddey") %>%
+  select(Player, FGP, FTP)
+
+# print result
+josh_giddey_stats
+```
+
+### 1.d.
+
+```{r}
+# creating new metrics
+team_orb_stats <- nba_stats %>%
+  group_by(Tm) %>%
+  summarise(
+    Avg_ORB = mean(ORB, na.rm = TRUE),
+    Min_ORB = min(ORB, na.rm = TRUE),
+    Max_ORB = max(ORB, na.rm = TRUE)
+  ) %>%
+  arrange(desc(Avg_ORB))
+
+# print result
+team_orb_stats
+```
+
+```{r}
+# team with the max Offensive rebounds per game
+max_orb_team <- team_orb_stats %>%
+  filter(Max_ORB == max(Max_ORB)) %>%
+  select(Tm, Max_ORB)
+
+# print result
+max_orb_team
+```
+
+### 1.e.
+
+```{r}
+# creating copies
+nba_stats_copy1 <- nba_stats
+nba_stats_copy2 <- nba_stats
+
+# Method 1: Impute missing FTP as FGP * average FTP for that team
+nba_stats_copy1 <- nba_stats_copy1 %>%
+  group_by(Tm) %>%
+  mutate(Avg_FTP = mean(FTP, na.rm = TRUE),
+         FTP = ifelse(is.na(FTP), FGP * Avg_FTP / 100, FTP)) %>%
+  ungroup() %>%
+  select(-Avg_FTP)
+
+# print result
+head(nba_stats_copy1)
+```
+
+```{r}
+# Method 2: Impute missing FTP with just the average FTP for that team
+nba_stats_copy2 <- nba_stats_copy2 %>%
+  group_by(Tm) %>%
+  mutate(Avg_FTP = mean(FTP, na.rm = TRUE),
+         FTP = ifelse(is.na(FTP), Avg_FTP, FTP)) %>%
+  ungroup() %>%
+  select(-Avg_FTP)
+
+# print result
+head(nba_stats_copy2)
+```
+
+**Method 1**: Imputing missing FTP as FGP multiplied by the team's average FTP. This method assumes that a player’s FTP should be correlated with their general shooting accuracy (FGP). Thus, adjust the missing values based on both their personal performance (FGP) and the team's overall performance (Avg_FTP). This method assumes that a player’s FGP is indicative of their FTP. This would be reasonable if a player’s field-goal shooting skill translates into free-throw ability, but this is not always the case (as free-throw shooting can be a distinct skill). This method is may be better because it personalizes the imputation by using both the player’s FGP and the team’s average FTP. It balances the player’s shooting performance with the team context, making the imputation more tailored.
+
+**Method 2**: Imputing missing FTP with the team's average FTP. This method assumes that missing values for FTP are simply best estimated by the team’s overall average FTP, with no correlation to the player’s FGP. All players on the same team have similar free-throw abilities, which might be a broader and less accurate assumption compared to Method 1. While this method being simpler, could be less accurate since it doesn't consider the player's shooting ability and assumes uniform free-throw performance within the team, which can lead to unrealistic imputations.
+
+\newpage
+
+### 2.a.
+
+```{r}
+# loading packages
+library(tidyr)
+library(dplyr)
+library(readr)
+
+# loading dataset
+data("billboard", package = "tidyr")
+
+# tidying the dataset
+billboard_tidy <- billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE
+  ) %>%
+  mutate(week = parse_number(week))
+
+# print result
+head(billboard_tidy)
+```
+
+The line `mutate(week = parse_number(week))` is essential for properly tidying the data because it extracts the numeric portion from the column names that represent weeks, such as "wk1", "wk2", etc. These original column names are strings that contain both text ("wk") and numbers, which can hinder analysis. By using `parse_number(week)`, we ensure that only the numeric values, such as 1, 2, 3, are retained in the week column. This is important because we need the week values to be numeric for proper sorting, comparison, and analysis. Without this transformation, the week column would remain a string, which could cause issues when ordering the data or performing calculations. For example, "wk10" might be placed before "wk2" if treated as a string, and the data would not be usable for numerical operations or visualizations based on week numbers. Therefore, this line is critical for ensuring that the data is both tidy and functional for analysis.
+
+### 2.b.
+
+Number of entries removed when values_drop_na set to true
+
+```{r}
+# initial dataset
+billboard_no_drop <- billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank"
+  )
+initial_count <- nrow(billboard_no_drop)
+
+# dataset with drop_na
+billboard_with_drop <- billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"),
+    names_to = "week",
+    values_to = "rank",
+    values_drop_na = TRUE
+  )
+final_count <- nrow(billboard_with_drop)
+entries_removed <- initial_count - final_count
+
+# print result
+entries_removed
+```
+
+### 2.c.
+
+```{r}
+# implicit_missing data frame
+implicit_missing <- billboard_tidy %>%
+  group_by(track) %>%
+  summarise(min_week = min(week), max_week = max(week)) %>%
+  rowwise() %>%
+  mutate(missing_weeks = list(setdiff(seq(min_week, max_week), billboard_tidy$week[billboard_tidy$track == track]))) %>%
+  filter(length(missing_weeks) > 0)
+
+# print result
+implicit_missing
+```
+
+An explicit missing value in a dataset is one that is clearly marked as missing, often represented as NA indicating that data was expected but not provided. In contrast, an implicit missing value occurs when certain data points are simply absent from the dataset, but their absence implies missing information. Implicit missing values are not explicitly flagged; instead, they are inferred from missing records. In the dataset, implicit missing values occur when a song falls off the chart and no further data is recorded for subsequent weeks. For example, if a song appears for 10 weeks and then drops off, there will be no records for weeks beyond the 10th. These gaps imply that the song did not chart in those weeks, but this missing information is not explicitly noted as NA in the dataset, making it an implicit missing value.
+
+### 2.d.
+
+In the tidied dataset, the features generally have appropriate data types, but there are a few considerations for improvement. The artist and track features are character variables, which is suitable since they contain text-based information. The week feature, representing the week number on the chart, is numeric and should remain as such for correct ordering and calculations. The rank feature, representing the song's ranking position, is also numeric, which is appropriate for performing numerical operations. However, the date.entered feature, which records the date a song entered the chart, might initially be stored as a string. For time-based analysis, such as calculating the duration a song stayed on the chart, it would be better suited as a Date type. Converting date.entered to a Date type allows for easier manipulation and calculations involving dates, such as time spans or chronological sorting. Thus, converting date.entered to the correct format ensures the data is ready for thorough analysis.
+
+```{r}
+# data types of features
+str(billboard_tidy)
+```
+
+```{r}
+# converting 'date.entered' to Date type
+billboard_tidy <- billboard_tidy %>%
+  mutate(date.entered = as.Date(date.entered, format = "%Y-%m-%d"))
+str(billboard_tidy)
+```
+
+### 2.e.
+
+```{r}
+# loading ggplot2
+library(ggplot2)
+
+# number of weeks each song stayed on the chart
+weeks_on_chart <- billboard_tidy %>%
+  group_by(track) %>%
+  summarise(weeks_on_chart = max(week) - min(week) + 1)
+
+# plotting the results
+ggplot(weeks_on_chart, aes(x = weeks_on_chart)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black") +
+  labs(
+    title = "Distribution of Song Duration on Billboard Chart (in Weeks)",
+    x = "Number of Weeks on Chart",
+    y = "Number of Songs"
+  ) +
+  theme_minimal()
+```
+
+This plot is interesting because it reveals the **longevity of songs** on the Billboard chart, providing insights into the patterns of song popularity. By visualizing the distribution of how many weeks different tracks remain on the chart, we can observe whether the music industry is dominated by short-term hits or if there are many songs that enjoy long-lasting popularity. This distribution helps us understand the dynamics of the music market, whether it is driven by quick turnovers or sustained interest in certain songs. The histogram can also highlight outlier songs that remain on the chart for significantly longer periods indicating their exceptional popularity or cultural impact. By exploring this, we can gain a deeper understanding of music trends, audience behavior, and the factors that contribute to a song's enduring success.
+
+### 2.f.
+
+```{r}
+# "Kryptonite" by 3 Doors Down
+kryptonite_data <- billboard_tidy %>%
+  filter(track == "Kryptonite")
+
+# rank progression over time
+ggplot(kryptonite_data, aes(x = week, y = rank)) +
+  geom_line() +
+  geom_point() +
+  scale_y_reverse() +  
+  labs(
+    title = "Rank Progression of 'Kryptonite' by 3 Doors Down Over Time",
+    x = "Week",
+    y = "Rank"
+  ) +
+  theme_minimal()
+```
+
+The figure shows the rank progression of the song "Kryptonite" by 3 Doors Down over time on the Billboard chart. The x-axis represents the weeks, while the y-axis (inverted) shows the song's rank, with lower values indicating a better ranking position. The line plot illustrates how the song initially climbs up the rankings, improving its position as the weeks pass. At its peak, the song achieves a strong rank before gradually declining in popularity as time progresses. This visual effectively captures the typical lifecycle of a hit song on the charts, showing both its rise to prominence and its eventual drop-off.
+
+### 2.g.
+
+```{r}
+# count of songs per artists(top 15)
+top_artists <- billboard_tidy %>%
+  group_by(artist) %>%
+  summarise(song_count = n_distinct(track)) %>%
+  arrange(desc(song_count)) %>%
+  slice(1:15)
+
+# plotting the data
+ggplot(top_artists, aes(x = reorder(artist, song_count), y = song_count)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  coord_flip() +
+  labs(
+    title = "Artist Vs Number of songs",
+    x = "Artist",
+    y = "Number of Songs"
+  ) +
+  theme_minimal()
+```
+
+The top 15 list of artists by the number of songs on the Billboard chart reflects the dominance of certain artists during the period covered by the dataset. It highlights popular artists who had significant chart success, with some well-known names likely to be expected. Artists like 3 Doors Down and Destiny's Child are not surprising, given their major success and influence during the 2000s. However, the presence of certain artists are unexpected depending on my personal knowledge of the music scene from that time. For example, an artist with a large number of songs but less mainstream recognition might stand out, suggesting that they had consistent chart success but weren't necessarily as visible in broader pop culture. Additionally, artists with shorter-lived fame or those known for just one big hit may appear surprisingly high on the list, which could reflect the strength of their musical catalog during that specific period. Overall, this list can be a fascinating look into trends and popularity in the music industry during the dataset's time range, and it might also prompt some curiosity about artists who were highly successful in their genre or era but aren't as well remembered today.
+
+### 2.h.
+
+```{r}
+# loading RevQtr
+RevQtr <- read.csv("RevQtr.csv")
+
+# Tidy the dataset using pivot_longer
+RevQtr_tidy <- RevQtr %>%
+  pivot_longer(
+    cols = starts_with("Qtr"),       
+    names_to = "Interval_ID",        
+    values_to = "Revenue"             
+  ) %>%
+  mutate(Interval_Type = "Qtr",      
+         Interval_ID = parse_number(Interval_ID)) %>%  
+  select(Group, Year, Interval_Type, Interval_ID, Revenue)  
+
+# Display the first few rows
+head(RevQtr_tidy)
+```
+
+```{r}
+# number of rows in the new dataset
+nrow(RevQtr_tidy)
+```

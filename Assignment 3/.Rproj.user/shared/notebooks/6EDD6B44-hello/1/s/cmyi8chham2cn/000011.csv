@@ -1,0 +1,7 @@
+"0","# team with the max Offensive rebounds per game"
+"0","max_orb_team <- team_orb_stats %>%"
+"0","  filter(Max_ORB == max(Max_ORB)) %>%"
+"0","  select(Tm, Max_ORB)"
+"0",""
+"0","# print result"
+"0","max_orb_team"

@@ -1,0 +1,7 @@
+"0","# FGP and FTP for Josh Giddey"
+"0","josh_giddey_stats <- nba_stats %>%"
+"0","  filter(Player == ""Josh Giddey"") %>%"
+"0","  select(Player, FGP, FTP)"
+"0",""
+"0","# print result"
+"0","josh_giddey_stats"
