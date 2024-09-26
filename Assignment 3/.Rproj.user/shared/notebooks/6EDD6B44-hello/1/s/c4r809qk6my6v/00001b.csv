@@ -1,0 +1,7 @@
+"0","# adding columns"
+"0","nba_stats <- nba_stats %>%"
+"0","  mutate(FGP = round((FG / FGA) * 100, 2),"
+"0","         FTP = round((FT / FTA) * 100, 2))"
+"0",""
+"0","# updated dataframe"
+"0","head(nba_stats)"
