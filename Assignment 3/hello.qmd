@@ -19,7 +19,7 @@ library(tidyverse)
 
 \newpage
 
-### **1.a.**  
+### **1.a.**
 
 The number of players with Free Throws per game greater than 0.5 and Assists per game greater than 0.7
 
