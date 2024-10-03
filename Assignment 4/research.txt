@@ -1,0 +1,91 @@
+Reinforcement Learning
+Smart Building
+Machine Learning
+Flexibility
+Aggregation
+Aggregator
+Consumer
+Incentive Design
+Demand Response
+Electricity Markets
+Deep Learning
+Supervised Learning
+Unsupervised Learning
+Temporal Difference Learning
+Q-learning
+Neural Networks
+Policy Gradient
+Markov Decision Process
+Stochastic Optimization
+Intelligent Building
+Energy-Efficient Building
+Automated Building
+Connected Infrastructure
+Green Building
+Smart Home
+Adaptive Buildings
+IoT-enabled Buildings
+Building Automation Systems
+Artificial Intelligence
+Data Mining
+Predictive Analytics
+Deep Learning
+Neural Networks
+Algorithmic Learning
+Pattern Recognition
+Computational Intelligence
+Data-Driven Models
+Adaptability
+Responsiveness
+Scalability
+Elasticity
+Versatility
+Agility
+Adjustability
+Resilience
+Modularity
+Consolidation
+Grouping
+Clustering
+Collection
+Summation
+Integration
+Accumulation
+Amalgamation
+Unification
+Customer
+End-user
+Client
+Buyer
+Purchaser
+User
+Recipient
+Subscriber
+Beneficiary
+Reward System
+Motivation Strategy
+Compensation Model
+Bonus Scheme
+Performance-based Rewards
+Pay-for-performance
+Encouragement Program
+Stimulus Plan
+Benefits Structure
+Load Management
+Grid Flexibility
+Peak Shaving
+Load Curtailment
+Energy Efficiency Program
+Dynamic Pricing
+Energy Demand Management
+Demand-side Response
+Load Shedding
+Energy Markets
+Power Trading
+Energy Exchanges
+Wholesale Electricity
+Capacity Markets
+Grid Trading
+Power Pool
+Energy Auction
+Market Pricing
