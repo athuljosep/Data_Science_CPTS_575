@@ -1,6 +1,5 @@
 red_wine_data =  read.csv("winequality-red.csv", header = TRUE)
 
-
 # Calculate the median of the quality column along with mean of alcohol
 quality_median <- median(red_wine_data$quality)
 alcohol_mean <- mean(red_wine_data$alcohol)
