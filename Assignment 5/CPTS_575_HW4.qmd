@@ -1,0 +1,93 @@
+---
+title: "Assignment 5"
+author: |
+  Athul Jose P \\ 
+  11867566
+dept: "School of Electrical Engineering and Computer Science"
+uni: "Washington State University"
+subtitle: "CptS 575 Data Science"
+geometry: margin=1in
+fontsize: 12pt
+format: pdf
+header-includes:
+  - \usepackage{titling}
+  - \pretitle{\begin{center}\Huge\bfseries}
+  - \posttitle{\par\end{center}\vfill}
+  - \preauthor{\begin{center}\Large}
+  - \postauthor{\par\end{center}\vfill}
+  - \predate{\begin{center}\Large}
+  - \postdate{\par\end{center}\vfill}
+  - \usepackage{fancyhdr}
+  - \fancypagestyle{plain}{
+      \fancyhf{}
+      \renewcommand{\headrulewidth}{0pt}
+      \renewcommand{\footrulewidth}{0pt}
+      \fancyfoot[C]{\thepage}
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{=tex}
+\begin{center}
+{\Large Athul Jose P \\ 11867566} \\[0.5cm]
+{\large School of Electrical Engineering and Computer Science} \\[0.5cm]
+{\large Washington State University} \\[0.5cm]
+{\large CptS 575 Data Science} \\[0.5cm]
+\end{center}
+```
+
+------------------------------------------------------------------------
+
+```{r}
+#| label: load-packages
+#| include: false
+
+library(tidyverse)
+```
+
+\newpage
+
+### **1.a.**
+
+```{r}
+# loading packages
+library(readr)
+
+# Load the dataset from the provided path
+df <- read_csv('winequality-red.csv', show_col_types = FALSE)
+
+# Fit the linear model: pH as the response, all other variables except citric_acid as predictors
+model <- lm(pH ~ . - citric_acid, data = df)
+
+# Print the summary of the model to show coefficients, errors, t-values, and p-values
+model_summary <- summary(model)
+
+model_summary
+```
+
+1.a.i
+
+Significant Predictors (p \< 0.05):
+
+```{r}
+# Extract the coefficients and p-values
+coefficients_df <- as.data.frame(model_summary$coefficients)
+
+# Filter predictors with p-values < 0.05
+significant_predictors <- coefficients_df[coefficients_df$`Pr(>|t|)` < 0.05, ]
+print(significant_predictors)
+```
+
+Non-significant Predictors (p \>= 0.05):
+
+```{r}
+# Filter predictors with p-values >= 0.05
+non_significant_predictors <- coefficients_df[coefficients_df$`Pr(>|t|)` >= 0.05, ]
+print(non_significant_predictors)
+```
+
+### **1.b.**
+
+Retrieves all rows from the left table that don't have a matching entry in the right table, while retaining only t
+
+### **1.c.**
