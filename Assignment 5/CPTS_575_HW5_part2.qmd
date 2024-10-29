@@ -1,0 +1,105 @@
+---
+title: "Assignment 5.b"
+author: |
+  Athul Jose P \\ 
+  11867566
+dept: "School of Electrical Engineering and Computer Science"
+uni: "Washington State University"
+subtitle: "CptS 575 Data Science"
+geometry: margin=1in
+fontsize: 12pt
+format: pdf
+header-includes:
+  - \usepackage{titling}
+  - \pretitle{\begin{center}\Huge\bfseries}
+  - \posttitle{\par\end{center}\vfill}
+  - \preauthor{\begin{center}\Large}
+  - \postauthor{\par\end{center}\vfill}
+  - \predate{\begin{center}\Large}
+  - \postdate{\par\end{center}\vfill}
+  - \usepackage{fancyhdr}
+  - \fancypagestyle{plain}{
+      \fancyhf{}
+      \renewcommand{\headrulewidth}{0pt}
+      \renewcommand{\footrulewidth}{0pt}
+      \fancyfoot[C]{\thepage}
+    }
+  - \pagestyle{empty}
+---
+
+\begin{center}
+{\Large Athul Jose P \\ 11867566} \\[0.5cm]
+{\large School of Electrical Engineering and Computer Science} \\[0.5cm]
+{\large Washington State University} \\[0.5cm]
+{\large CptS 575 Data Science} \\[0.5cm]
+\end{center}
+
+```{r}
+#| label: load-packages
+#| include: false
+
+library(tidyverse)
+```
+
+\newpage
+
+### **1.**
+
+```{r}
+# Load necessary libraries
+library(readr)       # For reading the CSV file
+library(tm)          # For text mining and preprocessing
+library(SnowballC)   # For stemming
+library(tokenizers)  # For tokenization
+library(quanteda)    # For creating Document-Term Matrix
+
+# Step 1: Load the Dataset
+data <- read.csv("bbc.csv")
+
+# Check the structure of the dataset
+str(data)
+
+# Step 2: Preprocessing the Text
+# Convert the text to lowercase, remove punctuation and numbers, and perform stemming
+corpus <- Corpus(VectorSource(data$text))  # Create corpus
+
+corpus <- tm_map(corpus, content_transformer(tolower))    # Convert to lowercase
+corpus <- tm_map(corpus, removePunctuation)               # Remove punctuation
+corpus <- tm_map(corpus, removeNumbers)                   # Remove numbers
+corpus <- tm_map(corpus, removeWords, stopwords("english")) # Remove stop words
+corpus <- tm_map(corpus, stemDocument)                    # Perform stemming
+
+# Step 3: Create Document-Term Matrix
+dtm <- DocumentTermMatrix(corpus)
+
+# Check the dimensions of the matrix
+print(dim(dtm))
+
+# Step 4: Remove low-frequency words (15% least frequent terms)
+term_frequency <- colSums(as.matrix(dtm))
+sorted_terms <- sort(term_frequency, decreasing = TRUE)
+
+# Keep only the top 85% of terms
+threshold <- quantile(sorted_terms, 0.85)
+dtm_filtered <- dtm[, which(term_frequency >= threshold)]
+
+# Step 5: Display words from the 2205th article with frequency >= 4
+article_2205 <- as.matrix(dtm_filtered[2205, ])
+feature_vector <- article_2205[article_2205 >= 4]
+print(feature_vector)
+
+```
+
+\newpage
+
+### **2.**
+
+```{r}
+# loading MASS library and Boston dataset
+library(MASS)
+data("Boston")
+
+# predictors
+predictors <- setdiff(names(Boston), "crim")
+predictors
+```
