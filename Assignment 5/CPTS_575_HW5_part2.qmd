@@ -95,11 +95,67 @@ print(feature_vector)
 ### **2.**
 
 ```{r}
-# loading MASS library and Boston dataset
-library(MASS)
-data("Boston")
+# Load necessary libraries
+library(readr)            # For reading data
+library(tm)               # For text preprocessing
+library(SnowballC)        # For stemming
+library(caret)            # For feature selection, train/test split, and evaluation
+library(naivebayes)       # For Multinomial Naive Bayes
+library(nnet)             # For Multinomial Logistic Regression
+library(dplyr)            # For data manipulation
 
-# predictors
-predictors <- setdiff(names(Boston), "crim")
-predictors
+# Step 4: Feature Selection - Remove Sparse Terms
+dtm <- removeSparseTerms(dtm, 0.99)  # Keep terms that appear in at least 1% of documents
+
+# Convert the DTM to a data frame and add the category labels
+df <- as.data.frame(as.matrix(dtm))
+df$category <- data$category
+
+# Step 5: Split Data into Training and Test Sets (80-20 Split)
+set.seed(123)  # Set seed for reproducibility
+train_index <- createDataPartition(df$category, p = 0.8, list = FALSE)  # Stratified split
+train_data <- df[train_index, ]
+test_data <- df[-train_index, ]
+
+# Step 6: Train a Multinomial Naive Bayes Classifier
+nb_model <- multinomial_naive_bayes(as.matrix(train_data[, -ncol(train_data)]), 
+                                    train_data$category)
+
+# Predict the categories for the test data
+nb_predictions <- predict(nb_model, as.matrix(test_data[, -ncol(test_data)]))
+
+# Step 7: Ensure Predictions and Actual Categories are Factors with the Same Levels
+# Convert both predictions and actual categories to factors with matching levels
+nb_predictions <- factor(nb_predictions, levels = levels(test_data$category))
+test_data$category <- factor(test_data$category)
+
+# Evaluate the Naive Bayes Model with a Confusion Matrix
+nb_conf_matrix <- confusionMatrix(nb_predictions, test_data$category)
+print(nb_conf_matrix)
+
+# Calculate Precision and Recall for Naive Bayes
+nb_results <- data.frame(nb_conf_matrix$byClass[, c("Precision", "Recall")])
+print(nb_results)
+
+# Step 8: Train a Multinomial Logistic Regression Classifier
+log_reg_model <- multinom(category ~ ., data = train_data)
+
+# Predict the categories for the test data
+log_reg_predictions <- predict(log_reg_model, newdata = test_data)
+
+# Step 9: Evaluate the Logistic Regression Model
+log_reg_conf_matrix <- confusionMatrix(log_reg_predictions, test_data$category)
+print(log_reg_conf_matrix)
+
+# Calculate Precision and Recall for Logistic Regression
+log_reg_results <- data.frame(log_reg_conf_matrix$byClass[, c("Precision", "Recall")])
+print(log_reg_results)
+
+# Step 10: Compare Results
+print("Naive Bayes - Precision and Recall:")
+print(nb_results)
+
+print("Logistic Regression - Precision and Recall:")
+print(log_reg_results)
+
 ```
