@@ -27,13 +27,14 @@ header-includes:
   - \pagestyle{empty}
 ---
 
+```{=tex}
 \begin{center}
 {\Large Athul Jose P \\ 11867566} \\[0.5cm]
 {\large School of Electrical Engineering and Computer Science} \\[0.5cm]
 {\large Washington State University} \\[0.5cm]
 {\large CptS 575 Data Science} \\[0.5cm]
 \end{center}
-
+```
 ```{r}
 #| label: load-packages
 #| include: false
@@ -46,48 +47,37 @@ library(tidyverse)
 ### **1.**
 
 ```{r}
-# Load necessary libraries
-library(readr)       # For reading the CSV file
-library(tm)          # For text mining and preprocessing
-library(SnowballC)   # For stemming
-library(tokenizers)  # For tokenization
-library(quanteda)    # For creating Document-Term Matrix
+# loading libraries
+library(readr)
+library(tm)
+library(SnowballC)
+library(quanteda)
 
-# Step 1: Load the Dataset
-data <- read.csv("bbc.csv")
+# loading dataset
+data <- read_csv("bbc.csv", show_col_types = FALSE)
 
-# Check the structure of the dataset
-str(data)
+# preprocessing and creating dtm
+corpus <- corpus(data$text)
+corpus <- tokens(corpus, 
+                what = "word", 
+                remove_punct = TRUE, 
+                remove_numbers = TRUE) %>%
+                tokens_tolower() %>%
+                tokens_remove(stopwords("english")) %>%
+                tokens_wordstem(language = "en")
 
-# Step 2: Preprocessing the Text
-# Convert the text to lowercase, remove punctuation and numbers, and perform stemming
-corpus <- Corpus(VectorSource(data$text))  # Create corpus
+dtm <- dfm(corpus)
 
-corpus <- tm_map(corpus, content_transformer(tolower))    # Convert to lowercase
-corpus <- tm_map(corpus, removePunctuation)               # Remove punctuation
-corpus <- tm_map(corpus, removeNumbers)                   # Remove numbers
-corpus <- tm_map(corpus, removeWords, stopwords("english")) # Remove stop words
-corpus <- tm_map(corpus, stemDocument)                    # Perform stemming
+# top 85% frequency
+term_freq <- colSums(as.matrix(dtm))
+term_freq <- sort(term_freq, decreasing = TRUE)
+threshold <- quantile(term_freq, 0.15)
+dtm_thres <- dtm[, term_freq >= threshold]
 
-# Step 3: Create Document-Term Matrix
-dtm <- DocumentTermMatrix(corpus)
-
-# Check the dimensions of the matrix
-print(dim(dtm))
-
-# Step 4: Remove low-frequency words (15% least frequent terms)
-term_frequency <- colSums(as.matrix(dtm))
-sorted_terms <- sort(term_frequency, decreasing = TRUE)
-
-# Keep only the top 85% of terms
-threshold <- quantile(sorted_terms, 0.85)
-dtm_filtered <- dtm[, which(term_frequency >= threshold)]
-
-# Step 5: Display words from the 2205th article with frequency >= 4
-article_2205 <- as.matrix(dtm_filtered[2205, ])
-feature_vector <- article_2205[article_2205 >= 4]
-print(feature_vector)
-
+# 2205th article
+article_vector <- as.matrix(dtm_thres[2205, ])
+article_vector_filtered <- article_vector[article_vector >= 4]
+print(article_vector_filtered)
 ```
 
 \newpage
@@ -95,67 +85,82 @@ print(feature_vector)
 ### **2.**
 
 ```{r}
-# Load necessary libraries
-library(readr)            # For reading data
-library(tm)               # For text preprocessing
-library(SnowballC)        # For stemming
-library(caret)            # For feature selection, train/test split, and evaluation
-library(naivebayes)       # For Multinomial Naive Bayes
-library(nnet)             # For Multinomial Logistic Regression
-library(dplyr)            # For data manipulation
+# loading libraries
+library(quanteda)
+library(caret)
+library(naivebayes)
+library(nnet)
+library(dplyr)
 
-# Step 4: Feature Selection - Remove Sparse Terms
-dtm <- removeSparseTerms(dtm, 0.99)  # Keep terms that appear in at least 1% of documents
+dtm_df <- as.data.frame(as.matrix(dtm_thres))
 
-# Convert the DTM to a data frame and add the category labels
-df <- as.data.frame(as.matrix(dtm))
-df$category <- data$category
+# dtm reduction using variance
+feature_variances <- apply(dtm_df, 2, var)
+variance_threshold <- 0.01
+dtm_reduced <- dtm_df[, feature_variances > variance_threshold]
 
-# Step 5: Split Data into Training and Test Sets (80-20 Split)
-set.seed(123)  # Set seed for reproducibility
-train_index <- createDataPartition(df$category, p = 0.8, list = FALSE)  # Stratified split
-train_data <- df[train_index, ]
-test_data <- df[-train_index, ]
+# Print dimensions
+print(dim(dtm_df))
+print(dim(dtm_reduced))
+```
 
-# Step 6: Train a Multinomial Naive Bayes Classifier
-nb_model <- multinomial_naive_bayes(as.matrix(train_data[, -ncol(train_data)]), 
-                                    train_data$category)
+```{r}
+# splitting into train and test
+data_split <- cbind(category = data$category, dtm_reduced)
+set.seed(123)
+train_index <- createDataPartition(data_split$category, p = 0.8, list = FALSE)
+train_data <- data_split[train_index, ]
+test_data <- data_split[-train_index, ]
 
-# Predict the categories for the test data
-nb_predictions <- predict(nb_model, as.matrix(test_data[, -ncol(test_data)]))
+# Check the balance of categories in the train and test sets
+print(table(train_data$category))
+print(table(test_data$category))
+```
 
-# Step 7: Ensure Predictions and Actual Categories are Factors with the Same Levels
-# Convert both predictions and actual categories to factors with matching levels
-nb_predictions <- factor(nb_predictions, levels = levels(test_data$category))
-test_data$category <- factor(test_data$category)
+```{r}
+# Separate x & y
+train_x <- as.matrix(train_data[, -1])  # Convert predictors to a matrix
+train_y <- as.factor(train_data$category)  # Ensure response is a factor
+test_x <- as.matrix(test_data[, -1])
 
-# Evaluate the Naive Bayes Model with a Confusion Matrix
-nb_conf_matrix <- confusionMatrix(nb_predictions, test_data$category)
-print(nb_conf_matrix)
+# multinomial naive bayes
+nb_model <- multinomial_naive_bayes(train_x, train_y)
+nb_predictions <- predict(nb_model, newdata = test_x)
+nb_predictions <- factor(nb_predictions, levels = levels(train_y))
+test_data$category <- factor(test_data$category, levels = levels(train_y))
 
-# Calculate Precision and Recall for Naive Bayes
-nb_results <- data.frame(nb_conf_matrix$byClass[, c("Precision", "Recall")])
-print(nb_results)
+# confusion matrix
+conf_matrix <- confusionMatrix(nb_predictions, test_data$category)
+print(conf_matrix)
 
-# Step 8: Train a Multinomial Logistic Regression Classifier
+# Precision and Recall
+conf_table <- conf_matrix$table
+precision <- diag(conf_table) / rowSums(conf_table)
+recall <- diag(conf_table) / colSums(conf_table)
+print("Precision by class:")
+print(precision)
+print("Recall by class:")
+print(recall)
+```
+
+```{r}
+# Train a Multinomial Logistic Regression model
 log_reg_model <- multinom(category ~ ., data = train_data)
-
-# Predict the categories for the test data
 log_reg_predictions <- predict(log_reg_model, newdata = test_data)
+log_reg_predictions <- factor(log_reg_predictions, levels = levels(test_data$category))
 
-# Step 9: Evaluate the Logistic Regression Model
-log_reg_conf_matrix <- confusionMatrix(log_reg_predictions, test_data$category)
-print(log_reg_conf_matrix)
+# confusion matrix
+conf_matrix_log_reg <- confusionMatrix(log_reg_predictions, test_data$category)
+print(conf_matrix_log_reg)
 
-# Calculate Precision and Recall for Logistic Regression
-log_reg_results <- data.frame(log_reg_conf_matrix$byClass[, c("Precision", "Recall")])
-print(log_reg_results)
+# Precision and Recall for each class
+conf_table_log_reg <- conf_matrix_log_reg$table
+precision_log_reg <- diag(conf_table_log_reg) / rowSums(conf_table_log_reg)
+recall_log_reg <- diag(conf_table_log_reg) / colSums(conf_table_log_reg)
 
-# Step 10: Compare Results
-print("Naive Bayes - Precision and Recall:")
-print(nb_results)
-
-print("Logistic Regression - Precision and Recall:")
-print(log_reg_results)
-
+# Print precision and recall for each class
+print("Precision by class:")
+print(precision_log_reg)
+print("Recall by class:")
+print(recall_log_reg)
 ```
