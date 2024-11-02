@@ -27,14 +27,15 @@ header-includes:
   - \pagestyle{empty}
 ---
 
-```{=tex}
 \begin{center}
 {\Large Athul Jose P \\ 11867566} \\[0.5cm]
 {\large School of Electrical Engineering and Computer Science} \\[0.5cm]
 {\large Washington State University} \\[0.5cm]
 {\large CptS 575 Data Science} \\[0.5cm]
 \end{center}
-```
+
+------------------------------------------------------------------------
+
 ```{r}
 #| label: load-packages
 #| include: false
@@ -44,7 +45,7 @@ library(tidyverse)
 
 \newpage
 
-### **1.**
+### **1**
 
 ```{r}
 # loading libraries
@@ -75,14 +76,24 @@ threshold <- quantile(term_freq, 0.15)
 dtm_thres <- dtm[, term_freq >= threshold]
 
 # 2205th article
-article_vector <- as.matrix(dtm_thres[2205, ])
+article_vector <- as.numeric(dtm_thres[2205, ])
+names(article_vector) <- colnames(dtm_thres)  
 article_vector_filtered <- article_vector[article_vector >= 4]
-print(article_vector_filtered)
+
+article_words <- data.frame(
+  word = names(article_vector_filtered),
+  frequency = article_vector_filtered
+)
+print(article_words)
 ```
+
+The processed output displays a list of key words extracted from the BBC news data, following tokenization and cleaning steps. After removing punctuation, numbers, and stopwords—common but less informative terms—the words were stemmed to their root forms, allowing similar words (like "connected" and "connect") to be grouped together. The remaining terms represent the most relevant words in the document, each with a frequency of 4 or higher, indicating their significance in the content.
+
+The word "school," with the highest frequency, suggests that the article centers around an educational theme, specifically focused on schools. Additional terms like "station," "connect," "satellite," and "base" imply a technical context, possibly describing infrastructure used to facilitate connectivity within the school. Words like "student," "use," "system," and "project" further emphasize the presence of a structured technological initiative benefiting students. Together, these high-frequency terms paint a picture of an article about a school-based technology project, likely involving a satellite or wireless system, designed to enhance student learning.
 
 \newpage
 
-### **2.**
+### 2
 
 ```{r}
 # loading libraries
@@ -108,7 +119,11 @@ print(dim(dtm_reduced))
 # splitting into train and test
 data_split <- cbind(category = data$category, dtm_reduced)
 set.seed(123)
-train_index <- createDataPartition(data_split$category, p = 0.8, list = FALSE)
+train_index <- createDataPartition(
+  data_split$category,
+  p = 0.8,
+  list = FALSE
+)
 train_data <- data_split[train_index, ]
 test_data <- data_split[-train_index, ]
 
@@ -142,8 +157,18 @@ print(recall)
 ```{r}
 # multinomial logistic regression
 train_y_numeric <- as.numeric(as.factor(train_y)) - 1
-log_reg_model <- cv.glmnet(as.matrix(train_x), train_y_numeric, family = "multinomial", alpha = 0)
-log_reg_predictions <- predict(log_reg_model, newx = as.matrix(test_x), s = "lambda.min", type = "class")
+log_reg_model <- cv.glmnet(
+  as.matrix(train_x), 
+  train_y_numeric, 
+  family = "multinomial", 
+  alpha = 0
+)
+log_reg_predictions <- predict(
+  log_reg_model, 
+  newx = as.matrix(test_x), 
+  s = "lambda.min", 
+  type = "class"
+)
 log_reg_predictions <- factor(log_reg_predictions, labels = levels(train_y))
 test_y <- factor(test_data$category, levels = levels(train_y))
 
