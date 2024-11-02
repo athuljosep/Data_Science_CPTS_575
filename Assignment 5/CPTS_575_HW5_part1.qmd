@@ -27,12 +27,14 @@ header-includes:
   - \pagestyle{empty}
 ---
 
+```{=tex}
 \begin{center}
 {\Large Athul Jose P \\ 11867566} \\[0.5cm]
 {\large School of Electrical Engineering and Computer Science} \\[0.5cm]
 {\large Washington State University} \\[0.5cm]
 {\large CptS 575 Data Science} \\[0.5cm]
 \end{center}
+```
 
 ------------------------------------------------------------------------
 
